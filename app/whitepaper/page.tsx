@@ -17,7 +17,6 @@ const tocItems = [
   { id: "equipo", number: "08", title: "Beneficios para Inversores" },
   { id: "gobernanza", number: "09", title: "Gobernanza DAO" },
   { id: "seguridad", number: "10", title: "Seguridad y Auditorias" },
-  { id: "legal", number: "11", title: "Aviso Legal" },
 ]
 
 function SectionHeading({ id, number, title }: { id: string; number: string; title: string }) {
@@ -161,7 +160,6 @@ export default function WhitepaperPage() {
             <span className="block text-white mt-1">Protocol</span>
           </h1>
           <p className="text-lg text-gray-400 mb-2">Whitepaper v1.0</p>
-          <p className="text-sm text-gray-600">Febrero 2026</p>
 
   <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A1A2E] border border-[#00D4FF]/20">
   <Image src="/images/cortexia-icono.png" alt="Cortexia" width={18} height={18} />
@@ -530,30 +528,6 @@ export default function WhitepaperPage() {
             "Audits publicos de modelos de IA para garantizar ausencia de sesgos.",
           ]}
         />
-
-        {/* 11 - Legal */}
-        <SectionHeading id="legal" number="11" title="Aviso Legal" />
-        <div className="p-5 rounded-xl bg-[#1A1A2E]/40 border border-[#0066FF]/10 text-sm text-gray-500 leading-relaxed space-y-3">
-          <p>
-            Este documento es solo para fines informativos y no constituye una oferta de venta ni una solicitud de oferta
-            de compra de valores, tokens u otros instrumentos financieros.
-          </p>
-          <p>
-            Los tokens CTX no representan acciones, participaciones, derechos de propiedad ni ningun otro tipo de interes
-            en CORTEXIA Protocol ni en ninguna entidad relacionada. La compra de tokens CTX conlleva riesgos significativos
-            y los compradores potenciales deben realizar su propia investigacion y consultar con asesores financieros
-            independientes antes de participar.
-          </p>
-          <p>
-            Las declaraciones a futuro contenidas en este documento se basan en expectativas actuales y pueden diferir
-            materialmente de los resultados reales. CORTEXIA Protocol no garantiza el rendimiento financiero ni la
-            rentabilidad de los tokens CTX.
-          </p>
-          <p>
-            Participar en la preventa o adquirir tokens CTX implica la aceptacion total de los terminos y condiciones
-            establecidos en los contratos inteligentes del protocolo.
-          </p>
-        </div>
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-[#0066FF]/10 text-center">
