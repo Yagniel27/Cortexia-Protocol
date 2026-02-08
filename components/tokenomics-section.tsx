@@ -31,10 +31,10 @@ export function TokenomicsSection() {
     const startRad = (startAngle * Math.PI) / 180
     const endRad = (endAngle * Math.PI) / 180
 
-    const x1 = 100 + 80 * Math.cos(startRad)
-    const y1 = 100 + 80 * Math.sin(startRad)
-    const x2 = 100 + 80 * Math.cos(endRad)
-    const y2 = 100 + 80 * Math.sin(endRad)
+    const x1 = Math.round((100 + 80 * Math.cos(startRad)) * 100) / 100
+    const y1 = Math.round((100 + 80 * Math.sin(startRad)) * 100) / 100
+    const x2 = Math.round((100 + 80 * Math.cos(endRad)) * 100) / 100
+    const y2 = Math.round((100 + 80 * Math.sin(endRad)) * 100) / 100
 
     const largeArcFlag = angle > 180 ? 1 : 0
 
