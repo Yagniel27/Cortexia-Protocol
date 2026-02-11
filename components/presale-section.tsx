@@ -14,7 +14,7 @@ const DESTINATION_WALLET = "0xb79f258db56710635434ddc1decf390521e3a723"
 // Formato: "YYYY-MM-DDTHH:MM:SSZ" (hora UTC)
 // Ejemplo testnet rapido: new Date(Date.now() + 1000 * 60 * 2) -> 2 minutos
 // ============================================================
-const PRESALE_TARGET_DATE = new Date("2026-03-15T18:00:00Z")
+const PRESALE_TARGET_DATE = new Date("2025-01-01T00:00:00Z")
 
 type TransactionState = "idle" | "pending" | "success" | "error"
 
@@ -279,18 +279,28 @@ export function PresaleSection() {
         </div>
 
         {/* Countdown Timer */}
-        {showCountdown && (
+        {mounted && (
           <div
             className={cn(
               "mb-10 transition-all duration-1000 delay-200",
               isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10",
             )}
           >
-            <p className="text-center text-base sm:text-lg text-gray-300 mb-4 tracking-wide font-medium">
-              Preventa comienza en...
-            </p>
+            {!isCountdownDone && (
+              <p className="text-center text-base sm:text-lg text-gray-300 mb-4 tracking-wide font-medium">
+                Preventa comienza en...
+              </p>
+            )}
             <div className="flex justify-center">
-              <div className="inline-flex items-center gap-2 sm:gap-4 px-5 sm:px-8 py-4 sm:py-5 rounded-xl bg-[#1A1A2E]/50 border border-[#0066FF]/15 backdrop-blur-sm">
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 sm:gap-4 px-5 sm:px-8 py-4 sm:py-5 rounded-xl bg-[#1A1A2E]/50 border backdrop-blur-sm transition-all duration-700",
+                  isCountdownDone
+                    ? "border-[#00D4FF]/10 opacity-75"
+                    : "border-[#0066FF]/15",
+                  isCountdownDone && "countdown-pulse-once",
+                )}
+              >
                 {[
                   { value: timeLeft.days, label: "dias" },
                   { value: timeLeft.hours, label: "horas" },
@@ -299,7 +309,12 @@ export function PresaleSection() {
                 ].map((unit, index) => (
                   <div key={unit.label} className="flex items-center gap-2 sm:gap-4">
                     <div className="flex flex-col items-center min-w-[40px] sm:min-w-[52px]">
-                      <span className="text-[28px] sm:text-[40px] font-bold leading-none text-[#00D4FF] tabular-nums">
+                      <span
+                        className={cn(
+                          "text-[28px] sm:text-[40px] font-bold leading-none tabular-nums transition-colors duration-700",
+                          isCountdownDone ? "text-[#00D4FF]/60" : "text-[#00D4FF]",
+                        )}
+                      >
                         {String(unit.value).padStart(2, "0")}
                       </span>
                       <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-widest">
@@ -315,6 +330,11 @@ export function PresaleSection() {
                 ))}
               </div>
             </div>
+            {isCountdownDone && (
+              <p className="presale-active-text text-center mt-5 text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-[#00D4FF]">
+                Preventa Activa
+              </p>
+            )}
           </div>
         )}
 
