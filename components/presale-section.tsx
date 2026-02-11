@@ -19,9 +19,9 @@ const PRESALE_TARGET_DATE = new Date("2026-03-15T18:00:00Z")
 type TransactionState = "idle" | "pending" | "success" | "error"
 
 const phases = [
-  { id: 1, name: "Fase 1", allocation: "5%", price: "$0.001", status: "active" as const },
-  { id: 2, name: "Fase 2", allocation: "10%", price: "$0.002", status: "locked" as const },
-  { id: 3, name: "Fase 3", allocation: "15%", price: "$0.003", status: "locked" as const },
+  { id: 1, name: "Fase 1", allocation: "5%", price: "$0.02", status: "active" as const },
+  { id: 2, name: "Fase 2", allocation: "10%", price: "$0.035", status: "locked" as const },
+  { id: 3, name: "Fase 3", allocation: "15%", price: "$0.045", status: "locked" as const },
 ]
 
 function useCountdown(targetDate: Date) {
@@ -238,7 +238,7 @@ export function PresaleSection() {
 
   const calculateTokens = (value: string) => {
     const num = Number.parseFloat(value) || 0
-    return (num / 0.001).toLocaleString()
+    return (num / 0.02).toLocaleString()
   }
 
   const getBlockExplorerUrl = () => {
@@ -476,7 +476,7 @@ export function PresaleSection() {
 
               <div className="flex justify-between items-center px-2 py-2 text-sm">
                 <span className="text-gray-500">Precio</span>
-                <span className="text-gray-400">1 CTX = $0.001</span>
+                <span className="text-gray-400">1 CTX = $0.02</span>
               </div>
 
               {txState === "error" && errorMessage && (

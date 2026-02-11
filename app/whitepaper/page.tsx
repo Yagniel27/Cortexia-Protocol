@@ -73,27 +73,27 @@ const tokenomicsData = [
 
 const roadmapData = [
   {
-    q: "Q4 2025",
+    q: "Q1 2026",
     title: "Kick-off + Preventa + Listing",
     items: ["Preventa oficial", "Whitepaper / Litepaper", "Listado en PancakeSwap / Uniswap", "Pool de liquidez basica"],
   },
   {
-    q: "Q1 2026",
+    q: "Q3 2026",
     title: "MVP Testnet",
     items: ["Testnet publica", "Validadores iniciales", "Smart contracts auditados", "Dashboard de monitoreo"],
   },
   {
-    q: "Q3 2026",
+    q: "Q1 2027",
     title: "Train-to-Earn",
     items: ["Marketplace de modelos IA", "Sistema Train-to-Earn", "Integracion frameworks", "API publica v1.0"],
   },
   {
-    q: "Q1 2027",
+    q: "Q3 2027",
     title: "Gobernanza DAO",
     items: ["DAO operativa", "Propuestas on-chain", "Treasury comunitaria", "Staking y delegacion"],
   },
   {
-    q: "Q3 2027",
+    q: "Q1 2028",
     title: "Mainnet + DeFi + Listing",
     items: ["Lanzamiento mainnet", "Integraciones DeFi", "Pools incentivadas", "Expansion multi-chain"],
   },
@@ -439,9 +439,9 @@ export default function WhitepaperPage() {
 
         <SubHeading>Preventa - 3 Fases</SubHeading>
         <div className="grid sm:grid-cols-3 gap-4 my-6">
-          <InfoCard title="Fase 1" value="$0.001" subtitle="5% del supply" />
-          <InfoCard title="Fase 2" value="$0.002" subtitle="10% del supply" />
-          <InfoCard title="Fase 3" value="$0.003" subtitle="15% del supply" />
+          <InfoCard title="Fase 1" value="$0.02" subtitle="5% del supply" />
+          <InfoCard title="Fase 2" value="$0.035" subtitle="10% del supply" />
+          <InfoCard title="Fase 3" value="$0.045" subtitle="15% del supply" />
         </div>
 
         <SubHeading>Modelo Economico</SubHeading>
@@ -457,7 +457,7 @@ export default function WhitepaperPage() {
         {/* 07 - Roadmap */}
         <SectionHeading id="roadmap" number="07" title="Roadmap" />
         <Paragraph>
-          Nuestro plan de desarrollo abarca desde Q4 2025 hasta Q3 2027, con hitos claros y medibles en cada etapa:
+          Nuestro plan de desarrollo abarca desde Q1 2026 hasta Q1 2028, con hitos claros y medibles en cada etapa:
         </Paragraph>
         <div className="space-y-6 my-6">
           {roadmapData.map((phase, index) => (

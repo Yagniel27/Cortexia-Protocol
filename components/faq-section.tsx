@@ -54,7 +54,7 @@ const faqCategories = [
       },
       {
         q: "¿Cuál es el precio de preventa?",
-        a: "La Fase 1 comienza en $0.001, la Fase 2 en $0.002, y la Fase 3 en $0.003 por CTX.",
+        a: "La Fase 1 comienza en $0.02, la Fase 2 en $0.035, y la Fase 3 en $0.045 por CTX.",
       },
     ],
   },
