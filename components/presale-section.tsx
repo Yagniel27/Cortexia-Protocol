@@ -63,6 +63,71 @@ const CTX_PRICE_USD = 0.02
 // ============================================================
 const BNB_PRICE_USD = 908
 
+// ============================================================
+// Progreso automatico de la Fase 1 segun tiempo transcurrido
+// Cada punto: [minutos_desde_inicio, porcentaje]
+// Maximo visual = 98%, nunca 100%
+// ============================================================
+const PROGRESS_CURVE: [number, number][] = [
+  [0, 0],
+  [10, 4],
+  [30, 11],
+  [45, 15],
+  [60, 21],
+  [120, 35],
+  [180, 48],
+  [210, 50],
+  [240, 57],
+  [270, 61],
+  [300, 66],
+  [330, 67],
+  [360, 69],
+  [420, 72],
+  [480, 80],
+  [540, 86],
+  [600, 89],
+  [660, 91],
+  [720, 92],
+  [780, 92],
+  [840, 94],
+  [900, 96],
+  [960, 97],
+  [1020, 97],
+  [1080, 98],
+  [1440, 98],
+]
+
+function interpolateProgress(elapsedMinutes: number): number {
+  if (elapsedMinutes <= 0) return 0
+  if (elapsedMinutes >= PROGRESS_CURVE[PROGRESS_CURVE.length - 1][0]) return 98
+
+  for (let i = 1; i < PROGRESS_CURVE.length; i++) {
+    const [prevMin, prevPct] = PROGRESS_CURVE[i - 1]
+    const [curMin, curPct] = PROGRESS_CURVE[i]
+    if (elapsedMinutes <= curMin) {
+      const t = (elapsedMinutes - prevMin) / (curMin - prevMin)
+      return prevPct + t * (curPct - prevPct)
+    }
+  }
+  return 98
+}
+
+function usePhaseProgress(startDate: Date) {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = (Date.now() - startDate.getTime()) / (1000 * 60) // minutes
+      setProgress(Math.min(98, Math.round(interpolateProgress(elapsed) * 10) / 10))
+    }
+    tick()
+    const id = setInterval(tick, 10_000) // update every 10s
+    return () => clearInterval(id)
+  }, [startDate])
+
+  return progress
+}
+
 function usePhaseCountdown(endDate: Date) {
   const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
   const [mounted, setMounted] = useState(false)
@@ -123,6 +188,7 @@ export function PresaleSection() {
   const isInView = useInView(sectionRef, { threshold: 0.2 })
   const { mounted, ...timeLeft } = useCountdown(PRESALE_TARGET_DATE)
   const phaseTimer = usePhaseCountdown(PHASE_END_DATE)
+  const phaseProgress = usePhaseProgress(PRESALE_TARGET_DATE)
   const isCountdownDone =
     timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
   const isPresaleActive = mounted && isCountdownDone
@@ -420,7 +486,8 @@ export function PresaleSection() {
             {phases.map((phase) => {
               const isPhaseUnlocked = phase.status === "active" && isPresaleActive
               const totalPhaseTokens = TOTAL_SUPPLY * (phase.allocationPercent / 100)
-              const soldPercent = totalPhaseTokens > 0 ? Math.round((phase.tokensSold / totalPhaseTokens) * 100) : 0
+              const displayPercent = isPhaseUnlocked ? phaseProgress : 0
+              const estimatedSold = Math.floor(totalPhaseTokens * (displayPercent / 100))
 
               return (
                 <div
@@ -465,18 +532,18 @@ export function PresaleSection() {
                       <div className="mt-4">
                         <div className="flex justify-between text-sm mb-2">
                           <span className="text-gray-400">Progreso</span>
-                          <span className="text-[#00D4FF]">{soldPercent}%</span>
+                          <span className="text-[#00D4FF]">{displayPercent}%</span>
                         </div>
                         <div className="h-2 rounded-full bg-[#0A0A1A] overflow-hidden">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-[#0066FF] to-[#00D4FF] relative"
-                            style={{ width: `${soldPercent}%` }}
+                            style={{ width: `${displayPercent}%`, transition: "width 2s ease-in-out" }}
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-scan" />
                           </div>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
-                          {phase.tokensSold.toLocaleString()} / {totalPhaseTokens.toLocaleString()} CTX vendidos
+                          {estimatedSold.toLocaleString()} / {totalPhaseTokens.toLocaleString()} CTX vendidos
                         </p>
                         {phaseTimer.mounted && (
                           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
