@@ -17,7 +17,6 @@ const tocItems = [
   { id: "equipo", number: "08", title: "Beneficios para Inversores" },
   { id: "gobernanza", number: "09", title: "Gobernanza DAO" },
   { id: "seguridad", number: "10", title: "Seguridad y Auditorias" },
-  { id: "legal", number: "11", title: "Aviso Legal" },
 ]
 
 function SectionHeading({ id, number, title }: { id: string; number: string; title: string }) {
@@ -74,27 +73,27 @@ const tokenomicsData = [
 
 const roadmapData = [
   {
-    q: "Q4 2025",
+    q: "Q1 2026",
     title: "Kick-off + Preventa + Listing",
     items: ["Preventa oficial", "Whitepaper / Litepaper", "Listado en PancakeSwap / Uniswap", "Pool de liquidez basica"],
   },
   {
-    q: "Q1 2026",
+    q: "Q3 2026",
     title: "MVP Testnet",
     items: ["Testnet publica", "Validadores iniciales", "Smart contracts auditados", "Dashboard de monitoreo"],
   },
   {
-    q: "Q3 2026",
+    q: "Q1 2027",
     title: "Train-to-Earn",
     items: ["Marketplace de modelos IA", "Sistema Train-to-Earn", "Integracion frameworks", "API publica v1.0"],
   },
   {
-    q: "Q1 2027",
+    q: "Q3 2027",
     title: "Gobernanza DAO",
     items: ["DAO operativa", "Propuestas on-chain", "Treasury comunitaria", "Staking y delegacion"],
   },
   {
-    q: "Q3 2027",
+    q: "Q1 2028",
     title: "Mainnet + DeFi + Listing",
     items: ["Lanzamiento mainnet", "Integraciones DeFi", "Pools incentivadas", "Expansion multi-chain"],
   },
@@ -161,7 +160,6 @@ export default function WhitepaperPage() {
             <span className="block text-white mt-1">Protocol</span>
           </h1>
           <p className="text-lg text-gray-400 mb-2">Whitepaper v1.0</p>
-          <p className="text-sm text-gray-600">Febrero 2026</p>
 
   <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A1A2E] border border-[#00D4FF]/20">
   <Image src="/images/cortexia-icono.png" alt="Cortexia" width={18} height={18} />
@@ -441,9 +439,9 @@ export default function WhitepaperPage() {
 
         <SubHeading>Preventa - 3 Fases</SubHeading>
         <div className="grid sm:grid-cols-3 gap-4 my-6">
-          <InfoCard title="Fase 1" value="$0.001" subtitle="5% del supply" />
-          <InfoCard title="Fase 2" value="$0.002" subtitle="10% del supply" />
-          <InfoCard title="Fase 3" value="$0.003" subtitle="15% del supply" />
+          <InfoCard title="Fase 1" value="$0.02" subtitle="5% del supply" />
+          <InfoCard title="Fase 2" value="$0.035" subtitle="10% del supply" />
+          <InfoCard title="Fase 3" value="$0.045" subtitle="15% del supply" />
         </div>
 
         <SubHeading>Modelo Economico</SubHeading>
@@ -459,7 +457,7 @@ export default function WhitepaperPage() {
         {/* 07 - Roadmap */}
         <SectionHeading id="roadmap" number="07" title="Roadmap" />
         <Paragraph>
-          Nuestro plan de desarrollo abarca desde Q4 2025 hasta Q3 2027, con hitos claros y medibles en cada etapa:
+          Nuestro plan de desarrollo abarca desde Q1 2026 hasta Q1 2028, con hitos claros y medibles en cada etapa:
         </Paragraph>
         <div className="space-y-6 my-6">
           {roadmapData.map((phase, index) => (
@@ -530,30 +528,6 @@ export default function WhitepaperPage() {
             "Audits publicos de modelos de IA para garantizar ausencia de sesgos.",
           ]}
         />
-
-        {/* 11 - Legal */}
-        <SectionHeading id="legal" number="11" title="Aviso Legal" />
-        <div className="p-5 rounded-xl bg-[#1A1A2E]/40 border border-[#0066FF]/10 text-sm text-gray-500 leading-relaxed space-y-3">
-          <p>
-            Este documento es solo para fines informativos y no constituye una oferta de venta ni una solicitud de oferta
-            de compra de valores, tokens u otros instrumentos financieros.
-          </p>
-          <p>
-            Los tokens CTX no representan acciones, participaciones, derechos de propiedad ni ningun otro tipo de interes
-            en CORTEXIA Protocol ni en ninguna entidad relacionada. La compra de tokens CTX conlleva riesgos significativos
-            y los compradores potenciales deben realizar su propia investigacion y consultar con asesores financieros
-            independientes antes de participar.
-          </p>
-          <p>
-            Las declaraciones a futuro contenidas en este documento se basan en expectativas actuales y pueden diferir
-            materialmente de los resultados reales. CORTEXIA Protocol no garantiza el rendimiento financiero ni la
-            rentabilidad de los tokens CTX.
-          </p>
-          <p>
-            Participar en la preventa o adquirir tokens CTX implica la aceptacion total de los terminos y condiciones
-            establecidos en los contratos inteligentes del protocolo.
-          </p>
-        </div>
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-[#0066FF]/10 text-center">

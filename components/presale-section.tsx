@@ -14,15 +14,141 @@ const DESTINATION_WALLET = "0xb79f258db56710635434ddc1decf390521e3a723"
 // Formato: "YYYY-MM-DDTHH:MM:SSZ" (hora UTC)
 // Ejemplo testnet rapido: new Date(Date.now() + 1000 * 60 * 2) -> 2 minutos
 // ============================================================
-const PRESALE_TARGET_DATE = new Date("2026-03-15T18:00:00Z")
+const PRESALE_TARGET_DATE = new Date("2025-01-01T00:00:00Z")
+
+// Total supply: 500,000,000 CTX
+const TOTAL_SUPPLY = 500_000_000
 
 type TransactionState = "idle" | "pending" | "success" | "error"
 
 const phases = [
-  { id: 1, name: "Fase 1", allocation: "5%", price: "$0.001", status: "active" as const },
-  { id: 2, name: "Fase 2", allocation: "10%", price: "$0.002", status: "locked" as const },
-  { id: 3, name: "Fase 3", allocation: "15%", price: "$0.003", status: "locked" as const },
+  {
+    id: 1,
+    name: "Fase 1",
+    allocation: "5%",
+    allocationPercent: 5,
+    price: "$0.02",
+    status: "active" as const,
+    tokensSold: 9_250_000,
+  },
+  {
+    id: 2,
+    name: "Fase 2",
+    allocation: "10%",
+    allocationPercent: 10,
+    price: "$0.035",
+    status: "locked" as const,
+    tokensSold: 0,
+  },
+  {
+    id: 3,
+    name: "Fase 3",
+    allocation: "15%",
+    allocationPercent: 15,
+    price: "$0.045",
+    status: "locked" as const,
+    tokensSold: 0,
+  },
 ]
+
+// Phase 1 duration in ms (30 days from presale start)
+const PHASE_1_DURATION_MS = 1000 * 60 * 60 * 24 * 30
+const PHASE_END_DATE = new Date(PRESALE_TARGET_DATE.getTime() + PHASE_1_DURATION_MS)
+
+// CTX price per token in USD
+const CTX_PRICE_USD = 0.02
+
+// ============================================================
+// PRECIO BNB EN USD — Cambia este valor manualmente cuando lo necesites
+// ============================================================
+const BNB_PRICE_USD = 908
+
+// ============================================================
+// Progreso automatico de la Fase 1 segun tiempo transcurrido
+// Cada punto: [minutos_desde_inicio, porcentaje]
+// Maximo visual = 98%, nunca 100%
+// ============================================================
+const PROGRESS_CURVE: [number, number][] = [
+  [0, 0],
+  [10, 4],
+  [30, 11],
+  [45, 15],
+  [60, 21],
+  [120, 35],
+  [180, 48],
+  [210, 50],
+  [240, 57],
+  [270, 61],
+  [300, 66],
+  [330, 67],
+  [360, 69],
+  [420, 72],
+  [480, 80],
+  [540, 86],
+  [600, 89],
+  [660, 91],
+  [720, 92],
+  [780, 92],
+  [840, 94],
+  [900, 96],
+  [960, 97],
+  [1020, 97],
+  [1080, 98],
+  [1440, 98],
+]
+
+function interpolateProgress(elapsedMinutes: number): number {
+  if (elapsedMinutes <= 0) return 0
+  if (elapsedMinutes >= PROGRESS_CURVE[PROGRESS_CURVE.length - 1][0]) return 98
+
+  for (let i = 1; i < PROGRESS_CURVE.length; i++) {
+    const [prevMin, prevPct] = PROGRESS_CURVE[i - 1]
+    const [curMin, curPct] = PROGRESS_CURVE[i]
+    if (elapsedMinutes <= curMin) {
+      const t = (elapsedMinutes - prevMin) / (curMin - prevMin)
+      return prevPct + t * (curPct - prevPct)
+    }
+  }
+  return 98
+}
+
+function usePhaseProgress(startDate: Date) {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = (Date.now() - startDate.getTime()) / (1000 * 60) // minutes
+      setProgress(Math.min(98, Math.round(interpolateProgress(elapsed) * 10) / 10))
+    }
+    tick()
+    const id = setInterval(tick, 10_000) // update every 10s
+    return () => clearInterval(id)
+  }, [startDate])
+
+  return progress
+}
+
+function usePhaseCountdown(endDate: Date) {
+  const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const tick = () => {
+      const diff = Math.max(0, endDate.getTime() - Date.now())
+      setTime({
+        h: Math.floor(diff / (1000 * 60 * 60)),
+        m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        s: Math.floor((diff % (1000 * 60)) / 1000),
+      })
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [endDate])
+
+  return { ...time, mounted }
+}
 
 function useCountdown(targetDate: Date) {
   const calculateTimeLeft = useCallback(() => {
@@ -61,6 +187,8 @@ export function PresaleSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { threshold: 0.2 })
   const { mounted, ...timeLeft } = useCountdown(PRESALE_TARGET_DATE)
+  const phaseTimer = usePhaseCountdown(PHASE_END_DATE)
+  const phaseProgress = usePhaseProgress(PRESALE_TARGET_DATE)
   const isCountdownDone =
     timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
   const isPresaleActive = mounted && isCountdownDone
@@ -237,8 +365,16 @@ export function PresaleSection() {
   }
 
   const calculateTokens = (value: string) => {
-    const num = Number.parseFloat(value) || 0
-    return (num / 0.001).toLocaleString()
+    const bnbAmount = Number.parseFloat(value) || 0
+    const usdValue = bnbAmount * BNB_PRICE_USD
+    return Math.floor(usdValue / CTX_PRICE_USD).toLocaleString()
+  }
+
+  const getUsdEquivalent = (value: string): string => {
+    const bnbAmount = Number.parseFloat(value) || 0
+    const usd = bnbAmount * BNB_PRICE_USD
+    if (usd === 0) return "$0.00"
+    return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   const getBlockExplorerUrl = () => {
@@ -279,18 +415,28 @@ export function PresaleSection() {
         </div>
 
         {/* Countdown Timer */}
-        {showCountdown && (
+        {mounted && (
           <div
             className={cn(
               "mb-10 transition-all duration-1000 delay-200",
               isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10",
             )}
           >
-            <p className="text-center text-base sm:text-lg text-gray-300 mb-4 tracking-wide font-medium">
-              Preventa comienza en...
-            </p>
+            {!isCountdownDone && (
+              <p className="text-center text-base sm:text-lg text-gray-300 mb-4 tracking-wide font-medium">
+                Preventa comienza en...
+              </p>
+            )}
             <div className="flex justify-center">
-              <div className="inline-flex items-center gap-2 sm:gap-4 px-5 sm:px-8 py-4 sm:py-5 rounded-xl bg-[#1A1A2E]/50 border border-[#0066FF]/15 backdrop-blur-sm">
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 sm:gap-4 px-5 sm:px-8 py-4 sm:py-5 rounded-xl bg-[#1A1A2E]/50 border backdrop-blur-sm transition-all duration-700",
+                  isCountdownDone
+                    ? "border-[#00D4FF]/10 opacity-75"
+                    : "border-[#0066FF]/15",
+                  isCountdownDone && "countdown-pulse-once",
+                )}
+              >
                 {[
                   { value: timeLeft.days, label: "dias" },
                   { value: timeLeft.hours, label: "horas" },
@@ -299,7 +445,12 @@ export function PresaleSection() {
                 ].map((unit, index) => (
                   <div key={unit.label} className="flex items-center gap-2 sm:gap-4">
                     <div className="flex flex-col items-center min-w-[40px] sm:min-w-[52px]">
-                      <span className="text-[28px] sm:text-[40px] font-bold leading-none text-[#00D4FF] tabular-nums">
+                      <span
+                        className={cn(
+                          "text-[28px] sm:text-[40px] font-bold leading-none tabular-nums transition-colors duration-700",
+                          isCountdownDone ? "text-[#00D4FF]/60" : "text-[#00D4FF]",
+                        )}
+                      >
                         {String(unit.value).padStart(2, "0")}
                       </span>
                       <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-widest">
@@ -315,6 +466,11 @@ export function PresaleSection() {
                 ))}
               </div>
             </div>
+            {isCountdownDone && (
+              <p className="presale-active-text text-center mt-5 text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-[#00D4FF]">
+                Preventa Activa
+              </p>
+            )}
           </div>
         )}
 
@@ -329,60 +485,81 @@ export function PresaleSection() {
 
             {phases.map((phase) => {
               const isPhaseUnlocked = phase.status === "active" && isPresaleActive
+              const totalPhaseTokens = TOTAL_SUPPLY * (phase.allocationPercent / 100)
+              const displayPercent = isPhaseUnlocked ? phaseProgress : 0
+              const estimatedSold = Math.floor(totalPhaseTokens * (displayPercent / 100))
 
               return (
                 <div
                   key={phase.id}
                   className={cn(
-                    "relative p-4 rounded-xl transition-all duration-300",
+                    "relative rounded-xl transition-all duration-300",
                     isPhaseUnlocked
-                      ? "glass-card border-[#00D4FF]/50 shadow-[0_0_30px_rgba(0,212,255,0.2)]"
-                      : "bg-[#1A1A2E]/50 grayscale opacity-60 cursor-not-allowed",
+                      ? "phase-active-card"
+                      : "p-4 bg-[#1A1A2E]/50 grayscale opacity-60 cursor-not-allowed",
                   )}
                 >
                   {!isPhaseUnlocked && <div className="absolute inset-0 rounded-xl backdrop-blur-[2px]" />}
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center",
-                          isPhaseUnlocked ? "bg-gradient-to-br from-[#0066FF] to-[#00D4FF]" : "bg-[#1A1A2E]",
-                        )}
-                      >
-                        {isPhaseUnlocked ? (
-                          <Unlock className="w-5 h-5 text-white" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-gray-500" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-white">{phase.name}</h4>
-                        <p className="text-sm text-gray-400">{phase.allocation} del supply</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-[#00D4FF]">{phase.price}</p>
-                      <p className="text-xs text-gray-500">por CTX</p>
-                    </div>
-                  </div>
-
-                  {isPhaseUnlocked && (
-                    <div className="mt-4">
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-400">Progreso</span>
-                        <span className="text-[#00D4FF]">37%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-[#1A1A2E] overflow-hidden">
+                  {/* Inner content with padding (inside gradient border for active) */}
+                  <div className={cn(isPhaseUnlocked && "relative z-10 p-4")}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#0066FF] to-[#00D4FF] relative"
-                          style={{ width: "37%" }}
+                          className={cn(
+                            "w-10 h-10 rounded-lg flex items-center justify-center",
+                            isPhaseUnlocked ? "bg-gradient-to-br from-[#0066FF] to-[#00D4FF]" : "bg-[#1A1A2E]",
+                          )}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-scan" />
+                          {isPhaseUnlocked ? (
+                            <Unlock className="w-5 h-5 text-white" />
+                          ) : (
+                            <Lock className="w-5 h-5 text-gray-500" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white">{phase.name}</h4>
+                          <p className="text-sm text-gray-400">{phase.allocation} del supply</p>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#00D4FF]">{phase.price}</p>
+                        <p className="text-xs text-gray-500">por CTX</p>
+                      </div>
                     </div>
-                  )}
+
+                    {isPhaseUnlocked && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-gray-400">Progreso</span>
+                          <span className="text-[#00D4FF]">{displayPercent}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-[#0A0A1A] overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#0066FF] to-[#00D4FF] relative"
+                            style={{ width: `${displayPercent}%`, transition: "width 2s ease-in-out" }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-scan" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {estimatedSold.toLocaleString()} / {totalPhaseTokens.toLocaleString()} CTX vendidos
+                        </p>
+                        {phaseTimer.mounted && (
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+                            <span className="text-sm text-[#00D4FF]/50 font-medium">Finaliza en :</span>
+                            <span className="text-lg font-semibold tabular-nums text-white phase-timer-glow">
+                              {String(phaseTimer.h).padStart(2, "0")}
+                              <span className="text-white/30 mx-0.5">:</span>
+                              {String(phaseTimer.m).padStart(2, "0")}
+                              <span className="text-white/30 mx-0.5">:</span>
+                              {String(phaseTimer.s).padStart(2, "0")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -433,19 +610,26 @@ export function PresaleSection() {
               <div className="p-4 rounded-xl bg-[#1A1A2E] border border-[#0066FF]/20">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-400">De</span>
-                  <span className="text-xs text-gray-500">Balance: {balance}</span>
+                  <span className="text-xs text-gray-500">Balance: {balance} BNB</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.0"
-                    step="0.001"
-                    min="0"
-                    disabled={txState === "pending" || !isPresaleActive}
-                    className="w-full bg-transparent text-2xl font-bold text-white placeholder-gray-600 focus:outline-none disabled:opacity-50"
-                  />
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0.0"
+                      step="0.01"
+                      min="0"
+                      disabled={txState === "pending" || !isPresaleActive}
+                      className="w-full bg-transparent text-2xl font-bold text-white placeholder-gray-600 focus:outline-none disabled:opacity-50"
+                    />
+                    {amount && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {"~ " + getUsdEquivalent(amount) + " USD"}
+                      </p>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A0A0A] border border-[#F3BA2F]/30 shrink-0">
                     <Image src="/images/binance-icon-seeklogo.svg" alt="BNB" width={24} height={24} />
                     <span className="font-semibold text-white">BNB</span>
@@ -476,7 +660,7 @@ export function PresaleSection() {
 
               <div className="flex justify-between items-center px-2 py-2 text-sm">
                 <span className="text-gray-500">Precio</span>
-                <span className="text-gray-400">1 CTX = $0.001</span>
+                <span className="text-gray-400">1 CTX = $0.02</span>
               </div>
 
               {txState === "error" && errorMessage && (

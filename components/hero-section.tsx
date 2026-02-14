@@ -32,10 +32,6 @@ export function HeroSection() {
             transform: `translate(calc(-50% + ${mousePosition.x * 2}px), calc(-50% + ${mousePosition.y * 2}px))`,
           }}
         />
-        <div
-          className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#00D4FF]/10 rounded-full blur-[100px] animate-glow-pulse"
-          style={{ animationDelay: "2s" }}
-        />
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

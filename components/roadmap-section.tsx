@@ -7,31 +7,31 @@ import { cn } from "@/lib/utils"
 const roadmapData = [
   {
     phase: "01",
-    quarter: "Q4 2025",
+    quarter: "Q1 2026",
     title: "Kick-off + Preventa + Listing",
     items: ["Preventa oficial", "Whitepaper/Litepaper", "Listado en PancakeSwap/Uniswap", "Pool de liquidez básica"],
   },
   {
     phase: "02",
-    quarter: "Q1 2026",
+    quarter: "Q3 2026",
     title: "MVP Testnet",
     items: ["Testnet pública", "Validadores iniciales", "Smart contracts auditados", "Dashboard de monitoreo"],
   },
   {
     phase: "03",
-    quarter: "Q3 2026",
+    quarter: "Q1 2027",
     title: "Train-to-Earn",
     items: ["Marketplace de modelos IA", "Sistema Train-to-Earn", "Integración frameworks", "API pública v1.0"],
   },
   {
     phase: "04",
-    quarter: "Q1 2027",
+    quarter: "Q3 2027",
     title: "Gobernanza DAO",
     items: ["DAO operativa", "Propuestas on-chain", "Treasury comunitaria", "Staking y delegación"],
   },
   {
     phase: "05",
-    quarter: "Q3 2027",
+    quarter: "Q1 2028",
     title: "Mainnet + DeFi + Listing",
     items: ["Lanzamiento mainnet", "Integraciones DeFi", "Pools incentivadas", "Expansión multi-chain"],
   },
@@ -55,7 +55,7 @@ export function RoadmapSection() {
           )}
         >
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            <span className="holographic-text">Roadmap 2025-2027</span>
+            <span className="holographic-text">Roadmap 2026-2028</span>
           </h2>
           <p className="text-lg text-gray-400">Nuestro camino hacia la IA descentralizada</p>
         </div>

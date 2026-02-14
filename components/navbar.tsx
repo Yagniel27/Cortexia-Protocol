@@ -46,7 +46,7 @@ export function Navbar() {
                 className="object-contain group-hover:scale-110 transition-transform duration-300"
               />
             </div>
-            <span className="text-lg font-bold tracking-tight hidden sm:block">
+            <span className="text-lg font-bold tracking-tight">
               <span className="holographic-text">CORTEXIA</span>
             </span>
           </a>
