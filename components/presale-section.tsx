@@ -58,6 +58,11 @@ const PHASE_END_DATE = new Date(PRESALE_TARGET_DATE.getTime() + PHASE_1_DURATION
 // CTX price per token in USD
 const CTX_PRICE_USD = 0.02
 
+// ============================================================
+// PRECIO BNB EN USD — Cambia este valor manualmente cuando lo necesites
+// ============================================================
+const BNB_PRICE_USD = 908
+
 function usePhaseCountdown(endDate: Date) {
   const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
   const [mounted, setMounted] = useState(false)
@@ -78,29 +83,6 @@ function usePhaseCountdown(endDate: Date) {
   }, [endDate])
 
   return { ...time, mounted }
-}
-
-function useBnbPrice() {
-  const [price, setPrice] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT")
-        const data = await res.json()
-        setPrice(parseFloat(data.price))
-      } catch {
-        // Fallback price in case the API fails
-        setPrice(650)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchPrice()
-  }, [])
-
-  return { price, loading }
 }
 
 function useCountdown(targetDate: Date) {
@@ -145,8 +127,6 @@ export function PresaleSection() {
     timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
   const isPresaleActive = mounted && isCountdownDone
   const showCountdown = mounted && !isCountdownDone
-
-  const bnb = useBnbPrice()
 
   const [walletAddress, setWalletAddress] = useState<string>("")
   const [balance, setBalance] = useState<string>("0.00")
@@ -318,20 +298,15 @@ export function PresaleSection() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  const bnbToUsd = (bnbAmount: number): number => {
-    if (!bnb.price) return 0
-    return bnbAmount * bnb.price
-  }
-
   const calculateTokens = (value: string) => {
     const bnbAmount = Number.parseFloat(value) || 0
-    const usdValue = bnbToUsd(bnbAmount)
+    const usdValue = bnbAmount * BNB_PRICE_USD
     return Math.floor(usdValue / CTX_PRICE_USD).toLocaleString()
   }
 
   const getUsdEquivalent = (value: string): string => {
     const bnbAmount = Number.parseFloat(value) || 0
-    const usd = bnbToUsd(bnbAmount)
+    const usd = bnbAmount * BNB_PRICE_USD
     if (usd === 0) return "$0.00"
     return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
@@ -582,7 +557,7 @@ export function PresaleSection() {
                       disabled={txState === "pending" || !isPresaleActive}
                       className="w-full bg-transparent text-2xl font-bold text-white placeholder-gray-600 focus:outline-none disabled:opacity-50"
                     />
-                    {amount && bnb.price && (
+                    {amount && (
                       <p className="text-xs text-gray-500 mt-1">
                         {"~ " + getUsdEquivalent(amount) + " USD"}
                       </p>
@@ -616,21 +591,9 @@ export function PresaleSection() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1 px-2 py-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">1 CTX</span>
-                  <span className="text-gray-400">$0.02 USD</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">1 BNB</span>
-                  <span className="text-gray-400">
-                    {bnb.loading
-                      ? "Cargando..."
-                      : bnb.price
-                        ? `$${bnb.price.toLocaleString(undefined, { maximumFractionDigits: 2 })} USD`
-                        : "---"}
-                  </span>
-                </div>
+              <div className="flex justify-between items-center px-2 py-2 text-sm">
+                <span className="text-gray-500">Precio</span>
+                <span className="text-gray-400">1 CTX = $0.02</span>
               </div>
 
               {txState === "error" && errorMessage && (
