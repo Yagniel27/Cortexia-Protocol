@@ -51,8 +51,12 @@ const phases = [
   },
 ]
 
-// Phase duration: 24h from activation
-const PHASE_END_DATE = new Date(Date.now() + 1000 * 60 * 60 * 24)
+// Phase 1 duration in ms (30 days from presale start)
+const PHASE_1_DURATION_MS = 1000 * 60 * 60 * 24 * 30
+const PHASE_END_DATE = new Date(PRESALE_TARGET_DATE.getTime() + PHASE_1_DURATION_MS)
+
+// CTX price per token in USD
+const CTX_PRICE_USD = 0.02
 
 function usePhaseCountdown(endDate: Date) {
   const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
@@ -74,6 +78,29 @@ function usePhaseCountdown(endDate: Date) {
   }, [endDate])
 
   return { ...time, mounted }
+}
+
+function useBnbPrice() {
+  const [price, setPrice] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT")
+        const data = await res.json()
+        setPrice(parseFloat(data.price))
+      } catch {
+        // Fallback price in case the API fails
+        setPrice(650)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPrice()
+  }, [])
+
+  return { price, loading }
 }
 
 function useCountdown(targetDate: Date) {
@@ -118,6 +145,8 @@ export function PresaleSection() {
     timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
   const isPresaleActive = mounted && isCountdownDone
   const showCountdown = mounted && !isCountdownDone
+
+  const bnb = useBnbPrice()
 
   const [walletAddress, setWalletAddress] = useState<string>("")
   const [balance, setBalance] = useState<string>("0.00")
@@ -289,9 +318,22 @@ export function PresaleSection() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
+  const bnbToUsd = (bnbAmount: number): number => {
+    if (!bnb.price) return 0
+    return bnbAmount * bnb.price
+  }
+
   const calculateTokens = (value: string) => {
-    const num = Number.parseFloat(value) || 0
-    return (num / 0.02).toLocaleString()
+    const bnbAmount = Number.parseFloat(value) || 0
+    const usdValue = bnbToUsd(bnbAmount)
+    return Math.floor(usdValue / CTX_PRICE_USD).toLocaleString()
+  }
+
+  const getUsdEquivalent = (value: string): string => {
+    const bnbAmount = Number.parseFloat(value) || 0
+    const usd = bnbToUsd(bnbAmount)
+    if (usd === 0) return "$0.00"
+    return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   const getBlockExplorerUrl = () => {
@@ -526,19 +568,26 @@ export function PresaleSection() {
               <div className="p-4 rounded-xl bg-[#1A1A2E] border border-[#0066FF]/20">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-400">De</span>
-                  <span className="text-xs text-gray-500">Balance: {balance}</span>
+                  <span className="text-xs text-gray-500">Balance: {balance} BNB</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.0"
-                    step="0.001"
-                    min="0"
-                    disabled={txState === "pending" || !isPresaleActive}
-                    className="w-full bg-transparent text-2xl font-bold text-white placeholder-gray-600 focus:outline-none disabled:opacity-50"
-                  />
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0.0"
+                      step="0.01"
+                      min="0"
+                      disabled={txState === "pending" || !isPresaleActive}
+                      className="w-full bg-transparent text-2xl font-bold text-white placeholder-gray-600 focus:outline-none disabled:opacity-50"
+                    />
+                    {amount && bnb.price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {"~ " + getUsdEquivalent(amount) + " USD"}
+                      </p>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A0A0A] border border-[#F3BA2F]/30 shrink-0">
                     <Image src="/images/binance-icon-seeklogo.svg" alt="BNB" width={24} height={24} />
                     <span className="font-semibold text-white">BNB</span>
@@ -567,9 +616,21 @@ export function PresaleSection() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center px-2 py-2 text-sm">
-                <span className="text-gray-500">Precio</span>
-                <span className="text-gray-400">1 CTX = $0.02</span>
+              <div className="flex flex-col gap-1 px-2 py-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">1 CTX</span>
+                  <span className="text-gray-400">$0.02 USD</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">1 BNB</span>
+                  <span className="text-gray-400">
+                    {bnb.loading
+                      ? "Cargando..."
+                      : bnb.price
+                        ? `$${bnb.price.toLocaleString(undefined, { maximumFractionDigits: 2 })} USD`
+                        : "---"}
+                  </span>
+                </div>
               </div>
 
               {txState === "error" && errorMessage && (
