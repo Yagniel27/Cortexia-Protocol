@@ -340,3 +340,10 @@
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* Phase timer micro-glow on digits */
+.phase-timer-glow {
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.25),
+    0 0 14px rgba(0, 212, 255, 0.12);
+}

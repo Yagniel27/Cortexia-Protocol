@@ -55,23 +55,25 @@ const phases = [
 const PHASE_END_DATE = new Date(Date.now() + 1000 * 60 * 60 * 24)
 
 function usePhaseCountdown(endDate: Date) {
-  const [timeStr, setTimeStr] = useState("")
+  const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     const tick = () => {
       const diff = Math.max(0, endDate.getTime() - Date.now())
-      const h = Math.floor(diff / (1000 * 60 * 60))
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      setTimeStr(`${h}h ${String(m).padStart(2, "0")}m`)
+      setTime({
+        h: Math.floor(diff / (1000 * 60 * 60)),
+        m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        s: Math.floor((diff % (1000 * 60)) / 1000),
+      })
     }
     tick()
-    const id = setInterval(tick, 60_000)
+    const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [endDate])
 
-  return { timeStr, mounted }
+  return { ...time, mounted }
 }
 
 function useCountdown(targetDate: Date) {
@@ -460,9 +462,16 @@ export function PresaleSection() {
                           {phase.tokensSold.toLocaleString()} / {totalPhaseTokens.toLocaleString()} CTX vendidos
                         </p>
                         {phaseTimer.mounted && (
-                          <p className="text-xs text-[#00D4FF]/60 mt-1">
-                            {"Finaliza en " + phaseTimer.timeStr}
-                          </p>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+                            <span className="text-sm text-[#00D4FF]/50 font-medium">Finaliza en :</span>
+                            <span className="text-lg font-semibold tabular-nums text-white phase-timer-glow">
+                              {String(phaseTimer.h).padStart(2, "0")}
+                              <span className="text-white/30 mx-0.5">:</span>
+                              {String(phaseTimer.m).padStart(2, "0")}
+                              <span className="text-white/30 mx-0.5">:</span>
+                              {String(phaseTimer.s).padStart(2, "0")}
+                            </span>
+                          </div>
                         )}
                       </div>
                     )}
