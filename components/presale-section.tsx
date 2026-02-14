@@ -16,13 +16,63 @@ const DESTINATION_WALLET = "0xb79f258db56710635434ddc1decf390521e3a723"
 // ============================================================
 const PRESALE_TARGET_DATE = new Date("2025-01-01T00:00:00Z")
 
+// Total supply: 500,000,000 CTX
+const TOTAL_SUPPLY = 500_000_000
+
 type TransactionState = "idle" | "pending" | "success" | "error"
 
 const phases = [
-  { id: 1, name: "Fase 1", allocation: "5%", price: "$0.02", status: "active" as const },
-  { id: 2, name: "Fase 2", allocation: "10%", price: "$0.035", status: "locked" as const },
-  { id: 3, name: "Fase 3", allocation: "15%", price: "$0.045", status: "locked" as const },
+  {
+    id: 1,
+    name: "Fase 1",
+    allocation: "5%",
+    allocationPercent: 5,
+    price: "$0.02",
+    status: "active" as const,
+    tokensSold: 9_250_000,
+  },
+  {
+    id: 2,
+    name: "Fase 2",
+    allocation: "10%",
+    allocationPercent: 10,
+    price: "$0.035",
+    status: "locked" as const,
+    tokensSold: 0,
+  },
+  {
+    id: 3,
+    name: "Fase 3",
+    allocation: "15%",
+    allocationPercent: 15,
+    price: "$0.045",
+    status: "locked" as const,
+    tokensSold: 0,
+  },
 ]
+
+// Phase duration: 24h from activation
+const PHASE_END_DATE = new Date(Date.now() + 1000 * 60 * 60 * 24)
+
+function usePhaseCountdown(endDate: Date) {
+  const [timeStr, setTimeStr] = useState("")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const tick = () => {
+      const diff = Math.max(0, endDate.getTime() - Date.now())
+      const h = Math.floor(diff / (1000 * 60 * 60))
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      setTimeStr(`${h}h ${String(m).padStart(2, "0")}m`)
+    }
+    tick()
+    const id = setInterval(tick, 60_000)
+    return () => clearInterval(id)
+  }, [endDate])
+
+  return { timeStr, mounted }
+}
 
 function useCountdown(targetDate: Date) {
   const calculateTimeLeft = useCallback(() => {
@@ -61,6 +111,7 @@ export function PresaleSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { threshold: 0.2 })
   const { mounted, ...timeLeft } = useCountdown(PRESALE_TARGET_DATE)
+  const phaseTimer = usePhaseCountdown(PHASE_END_DATE)
   const isCountdownDone =
     timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
   const isPresaleActive = mounted && isCountdownDone
@@ -349,60 +400,73 @@ export function PresaleSection() {
 
             {phases.map((phase) => {
               const isPhaseUnlocked = phase.status === "active" && isPresaleActive
+              const totalPhaseTokens = TOTAL_SUPPLY * (phase.allocationPercent / 100)
+              const soldPercent = totalPhaseTokens > 0 ? Math.round((phase.tokensSold / totalPhaseTokens) * 100) : 0
 
               return (
                 <div
                   key={phase.id}
                   className={cn(
-                    "relative p-4 rounded-xl transition-all duration-300",
+                    "relative rounded-xl transition-all duration-300",
                     isPhaseUnlocked
-                      ? "glass-card border-[#00D4FF]/50 shadow-[0_0_30px_rgba(0,212,255,0.2)]"
-                      : "bg-[#1A1A2E]/50 grayscale opacity-60 cursor-not-allowed",
+                      ? "phase-active-card"
+                      : "p-4 bg-[#1A1A2E]/50 grayscale opacity-60 cursor-not-allowed",
                   )}
                 >
                   {!isPhaseUnlocked && <div className="absolute inset-0 rounded-xl backdrop-blur-[2px]" />}
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center",
-                          isPhaseUnlocked ? "bg-gradient-to-br from-[#0066FF] to-[#00D4FF]" : "bg-[#1A1A2E]",
-                        )}
-                      >
-                        {isPhaseUnlocked ? (
-                          <Unlock className="w-5 h-5 text-white" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-gray-500" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-white">{phase.name}</h4>
-                        <p className="text-sm text-gray-400">{phase.allocation} del supply</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-[#00D4FF]">{phase.price}</p>
-                      <p className="text-xs text-gray-500">por CTX</p>
-                    </div>
-                  </div>
-
-                  {isPhaseUnlocked && (
-                    <div className="mt-4">
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-400">Progreso</span>
-                        <span className="text-[#00D4FF]">37%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-[#1A1A2E] overflow-hidden">
+                  {/* Inner content with padding (inside gradient border for active) */}
+                  <div className={cn(isPhaseUnlocked && "relative z-10 p-4")}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#0066FF] to-[#00D4FF] relative"
-                          style={{ width: "37%" }}
+                          className={cn(
+                            "w-10 h-10 rounded-lg flex items-center justify-center",
+                            isPhaseUnlocked ? "bg-gradient-to-br from-[#0066FF] to-[#00D4FF]" : "bg-[#1A1A2E]",
+                          )}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-scan" />
+                          {isPhaseUnlocked ? (
+                            <Unlock className="w-5 h-5 text-white" />
+                          ) : (
+                            <Lock className="w-5 h-5 text-gray-500" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white">{phase.name}</h4>
+                          <p className="text-sm text-gray-400">{phase.allocation} del supply</p>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#00D4FF]">{phase.price}</p>
+                        <p className="text-xs text-gray-500">por CTX</p>
+                      </div>
                     </div>
-                  )}
+
+                    {isPhaseUnlocked && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-gray-400">Progreso</span>
+                          <span className="text-[#00D4FF]">{soldPercent}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-[#0A0A1A] overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#0066FF] to-[#00D4FF] relative"
+                            style={{ width: `${soldPercent}%` }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-scan" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {phase.tokensSold.toLocaleString()} / {totalPhaseTokens.toLocaleString()} CTX vendidos
+                        </p>
+                        {phaseTimer.mounted && (
+                          <p className="text-xs text-[#00D4FF]/60 mt-1">
+                            {"Finaliza en " + phaseTimer.timeStr}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
