@@ -52,7 +52,7 @@ const phases = [
 ]
 
 // Phase 1 duration in ms (30 days from presale start)
-const PHASE_1_DURATION_MS = 1000 * 60 * 60 * 24 * 30
+const PHASE_1_DURATION_MS = 1000 * 60 * 60 * 24 
 const PHASE_END_DATE = new Date(PRESALE_TARGET_DATE.getTime() + PHASE_1_DURATION_MS)
 
 // CTX price per token in USD
