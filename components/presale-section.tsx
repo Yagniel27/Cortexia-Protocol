@@ -14,7 +14,7 @@ const DESTINATION_WALLET = "0xb79f258db56710635434ddc1decf390521e3a723"
 // Formato: "YYYY-MM-DDTHH:MM:SSZ" (hora UTC)
 // Ejemplo testnet rapido: new Date(Date.now() + 1000 * 60 * 2) -> 2 minutos
 // ============================================================
-const PRESALE_TARGET_DATE = new Date("2026-02-15T00:00:00Z")
+const PRESALE_TARGET_DATE = new Date("2026-02-16T00:00:00Z")
 
 // Total supply: 500,000,000 CTX
 const TOTAL_SUPPLY = 500_000_000
