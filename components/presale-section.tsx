@@ -61,7 +61,7 @@ const CTX_PRICE_USD = 0.02
 // ============================================================
 // PRECIO BNB EN USD — Cambia este valor manualmente cuando lo necesites
 // ============================================================
-const BNB_PRICE_USD = 908
+const BNB_PRICE_USD = 634
 
 // ============================================================
 // Progreso automatico de la Fase 1 segun tiempo transcurrido
